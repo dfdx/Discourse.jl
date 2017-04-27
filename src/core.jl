@@ -23,7 +23,7 @@ function Base.show(io::IO, ds::Discourse)
     print(io, "Discourse(host=$(uri.host), user=$(ds.api_username))")
 end
 
-# http wrappers
+## http wrappers
 
 function do_get(ds::Discourse, endpoint::String; query...)
     query = Dict{Any,Any}(query)
@@ -51,7 +51,9 @@ function do_post(ds::Discourse, endpoint::String, json::Dict)
 end
 
 
-# methods
+## methods
+
+# users
 
 function list_public_users(ds::Discourse; query...)
     return do_get(ds, "/directory_items.json"; query)
@@ -59,15 +61,39 @@ end
 
 
 
+# topics & posts
+
+
+function get_topic(ds::Discourse, id::Integer)
+    return do_get(ds, "/t/$id.json")
+end
+
+
+function get_post(ds::Discourse, id::Integer)
+    return do_get(ds, "/posts/$id.json")
+end
+
+
+
 function create_post(ds::Discourse, topic_id::Int, content::AbstractString)
     data = Dict(:topic_id => topic_id,
                 :raw => content)
-    do_post(ds, "/posts", data)
+    return do_post(ds, "/posts", data)
 end
 
 
-function create_topic(ds::Discourse, title::Int, content::AbstractString)
+function create_topic(ds::Discourse, title::Int, content::AbstractString;
+                      category=nothing, created_at=nothing)
     data = Dict(:title => title,
                 :raw => content)
-    do_post(ds, "/posts", data)
+    if category != nothing
+        data[:category] = category
+    end
+    if created_at != nothing
+        data[:created_at] = created_at
+    end
+    return do_post(ds, "/posts", data)
 end
+
+
+
